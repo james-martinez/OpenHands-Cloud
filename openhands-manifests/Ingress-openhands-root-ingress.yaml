@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: openhands
+  name: openhands-root-ingress
+  annotations: {}
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: openhands.site.tld
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: openhands-service
+            port:
+              number: 3000

@@ -1,0 +1,24 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  namespace: openhands
+  name: openhands-redis
+  labels:
+    app.kubernetes.io/instance: openhands
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 7.4.1
+    helm.sh/chart: redis-20.3.0
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: openhands
+      app.kubernetes.io/name: redis
+  policyTypes:
+  - Ingress
+  - Egress
+  egress:
+  - {}
+  ingress:
+  - ports:
+    - port: 6379

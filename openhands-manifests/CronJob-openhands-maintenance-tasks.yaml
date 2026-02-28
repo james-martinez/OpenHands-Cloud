@@ -1,0 +1,172 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  namespace: openhands
+  name: openhands-maintenance-tasks
+  labels:
+    app: openhands-maintenance-tasks
+spec:
+  schedule: 0 6 * * *
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      ttlSecondsAfterFinished: 3600
+      template:
+        metadata:
+          name: maintenance-tasks
+          labels:
+            app: openhands-maintenance-tasks
+        spec:
+          securityContext:
+            fsGroup: 42420
+            fsGroupChangePolicy: Always
+            runAsGroup: 42420
+            runAsNonRoot: true
+            runAsUser: 42420
+          serviceAccountName: openhands-sa
+          restartPolicy: Never
+          containers:
+          - name: maintenance-tasks
+            image: ghcr.io/openhands/enterprise-server:sha-4ea3e4b
+            command:
+            - /bin/sh
+            - -c
+            workingDir: /app
+            args:
+            - 'echo "Running maintenance tasks..."
+
+              python -m run_maintenance_tasks
+
+              '
+            env:
+            - name: RUNTIME
+              value: remote
+            - name: OPENHANDS_CONFIG_CLS
+              value: server.config.SaaSServerConfig
+            - name: OPENHANDS_GITHUB_SERVICE_CLS
+              value: integrations.github.github_service.SaaSGitHubService
+            - name: OPENHANDS_GITLAB_SERVICE_CLS
+              value: integrations.gitlab.gitlab_service.SaaSGitLabService
+            - name: OPENHANDS_MCP_CONFIG_CLS
+              value: server.mcp.mcp_config.SaaSOpenHandsMCPConfig
+            - name: OPENHANDS_CONVERSATION_VALIDATOR_CLS
+              value: storage.saas_conversation_validator.SaasConversationValidator
+            - name: OPENHANDS_EXPERIMENT_MANAGER_CLS
+              value: experiments.experiment_manager.SaaSExperimentManager
+            - name: LOG_JSON
+              value: '1'
+            - name: LOG_JSON_LEVEL_KEY
+              value: severity
+            - name: POSTHOG_CLIENT_KEY
+              value: 1234abcd
+            - name: FILE_STORE_PATH
+              value: openhands-sessions
+            - name: SANDBOX_KEEP_RUNTIME_ALIVE
+              value: 'true'
+            - name: SANDBOX_CLOSE_DELAY
+              value: '1800'
+            - name: FILE_STORE
+              value: null
+            - name: SANDBOX_USER_ID
+              value: '0'
+            - name: RUN_AS_OPENHANDS
+              value: 'false'
+            - name: NO_SETUP
+              value: 'true'
+            - name: SANDBOX_RUNTIME_CONTAINER_IMAGE
+              value: ghcr.io/openhands/runtime:4ea3e4b1fd850ae07e7b972feb36fca6e789d7eb-nikolaik
+            - name: SANDBOX_REMOTE_RUNTIME_API_URL
+              value: https://dummy-runtime-api.example.com
+            - name: SANDBOX_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sandbox-api-key
+                  key: sandbox-api-key
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: jwt-secret
+            - name: REDIS_HOST
+              value: openhands-redis-master
+            - name: REDIS_PORT
+              value: '6379'
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis
+                  key: redis-password
+            - name: KEYCLOAK_SERVER_URL
+              value: http://keycloak
+            - name: KEYCLOAK_REALM_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-realm
+                  key: realm-name
+            - name: KEYCLOAK_PROVIDER_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-realm
+                  key: provider-name
+            - name: KEYCLOAK_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-realm
+                  key: client-id
+            - name: KEYCLOAK_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-realm
+                  key: client-secret
+            - name: KEYCLOAK_SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-realm
+                  key: smtp-password
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-admin
+                  key: admin-password
+            - name: LITE_LLM_API_URL
+              value: https://llm-proxy.example.com
+            - name: LITE_LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lite-llm-api-key
+                  key: lite-llm-api-key
+            - name: LITE_LLM_TEAM_ID
+              value: openhands
+            - name: WEB_HOST
+              value: openhands.site.tld
+            - name: AUTH_WEB_HOST
+              value: auth.openhands.site.tld
+            - name: MCP_HOST
+              value: openhands.site.tld
+            - name: DB_HOST
+              value: openhands-postgresql
+            - name: DB_USER
+              value: postgres
+            - name: DB_NAME
+              value: ''
+            - name: DISABLE_WAITLIST
+              value: 'true'
+            - name: RUNTIME_URL_PATTERN
+              value: https://{runtime_id}.runtime.app.example.com
+            - name: SANDBOX_REMOTE_RUNTIME_API_TIMEOUT
+              value: '60'
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-password
+                  key: password
+            resources:
+              limits:
+                cpu: 500m
+                memory: 1Gi
+              requests:
+                cpu: 200m
+                memory: 512Mi

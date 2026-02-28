@@ -1,0 +1,92 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  namespace: openhands
+  name: openhands-runtime-api-warm-runtimes
+  labels:
+    helm.sh/chart: runtime-api-0.1.20
+    app.kubernetes.io/name: runtime-api
+    app.kubernetes.io/instance: openhands
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  schedule: '* * * * *'
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: runtime-api
+            app.kubernetes.io/instance: openhands
+        spec:
+          securityContext:
+            fsGroup: 1000
+            fsGroupChangePolicy: Always
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          serviceAccountName: runtime-api-sa
+          restartPolicy: OnFailure
+          containers:
+          - name: warm-runtimes
+            image: ghcr.io/openhands/runtime-api:sha-0c907c9
+            imagePullPolicy: Always
+            command:
+            - python
+            - /app/warm_runtimes.py
+            env:
+            - name: ARTIFACT_REGISTRY_LOCATION
+              value: us-central1
+            - name: ARTIFACT_REGISTRY_REPOSITORY
+              value: runtime-api-docker-repo
+            - name: CPU_REQUEST
+              value: 500m
+            - name: DB_HOST
+              value: oh-main-postgresql
+            - name: DB_NAME
+              value: runtime_api_db
+            - name: DB_USER
+              value: postgres
+            - name: DEV_MODE
+              value: 'false'
+            - name: EPHEMERAL_STORAGE_SIZE
+              value: 10Gi
+            - name: GCP_REGION
+              value: us-central1
+            - name: INCLUDE_LIVENESS_PROBE
+              value: 'true'
+            - name: INCLUDE_START_PROBE
+              value: 'true'
+            - name: K8S_NAMESPACE
+              value: openhands
+            - name: MEMORY_LIMIT
+              value: 3072Mi
+            - name: MEMORY_REQUEST
+              value: 3072Mi
+            - name: PYTHONDONTWRITEBYTECODE
+              value: '1'
+            - name: PYTHONUNBUFFERED
+              value: '1'
+            - name: RUNTIME_CLASS
+              value: ''
+            - name: RUNTIME_DISABLE_SSL
+              value: 'true'
+            - name: STORAGE_CLASS
+              value: standard-rwo
+            - name: RUNTIME_DEAD_SECONDS
+              value: '86400'
+            - name: RUNTIME_IN_SAME_CLUSTER
+              value: 'true'
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-password
+                  key: password
+            volumeMounts:
+            - name: warm-runtimes-config
+              mountPath: /config
+          volumes:
+          - name: warm-runtimes-config
+            configMap:
+              name: warm-runtimes-config
