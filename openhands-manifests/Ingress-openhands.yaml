@@ -1,19 +1,19 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
+  name: openhands-app
   namespace: openhands
-  name: openhands-mcp-ingress
-  annotations: {}
+  labels:
+    app: openhands-app
 spec:
-  ingressClassName: traefik
   rules:
   - host: openhands.site.tld
     http:
       paths:
-      - path: /mcp/mcp
+      - path: /
         pathType: Prefix
         backend:
           service:
-            name: openhands-mcp-service
+            name: openhands-app
             port:
               number: 3000
