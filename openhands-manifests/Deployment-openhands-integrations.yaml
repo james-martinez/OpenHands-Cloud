@@ -2,21 +2,19 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: openhands
-  name: openhands
+  name: openhands-integrations
   labels:
-    app: openhands
+    app: openhands-integrations
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
-      app: openhands
+      app: openhands-integrations
   template:
     metadata:
       labels:
-        app: openhands
-      annotations:
-        checksum/keycloak-config: a6461bf3ab032d2b1b13ee15717fa86dd00f229c6644ebf95776732ffa10425f
-        checksum/litellm-config: 84157ad1bd4be42a52895805c8d9942864e45c241d21ee84beb28b9e8408469d
+        app: openhands-integrations
+      annotations: null
     spec:
       terminationGracePeriodSeconds: 60
       serviceAccountName: openhands-sa
@@ -26,24 +24,25 @@ spec:
         runAsGroup: 42420
         runAsNonRoot: true
         runAsUser: 42420
-      volumes: []
+      volumes: null
       containers:
-      - name: openhands
+      - name: openhands-integrations
         imagePullPolicy: Always
         image: ghcr.io/openhands/enterprise-server:sha-4ea3e4b
         command:
         - /bin/sh
         args:
         - -c
-        - exec uvicorn saas_server:app --host 0.0.0.0 --port 3000 --workers 3
+        - exec uvicorn saas_server:app --host 0.0.0.0 --port 3000 --workers 2
         ports:
         - containerPort: 3000
         resources:
           limits:
-            memory: 3Gi
+            cpu: 1000m
+            memory: 1.5Gi
           requests:
-            cpu: 1
-            memory: 3Gi
+            cpu: 1000m
+            memory: 1.5Gi
         startupProbe:
           httpGet:
             path: /health
@@ -59,7 +58,7 @@ spec:
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /ready
+            path: /health
             port: 3000
           initialDelaySeconds: 5
           periodSeconds: 10

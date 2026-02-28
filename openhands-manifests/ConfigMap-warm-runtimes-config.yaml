@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: openhands
+  name: warm-runtimes-config
+  labels:
+    helm.sh/chart: runtime-api-0.1.20
+    app.kubernetes.io/name: runtime-api
+    app.kubernetes.io/instance: openhands
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+data:
+  warm-runtimes.json: '{"configs":[{"command":["/openhands/micromamba/bin/micromamba","run","-n","openhands","poetry","run","python","-u","-m","openhands.runtime.action_execution_server","60000","--working-dir","/workspace","--plugins","agent_skills","jupyter","vscode","--username","root","--user-id","0"],"environment":{},"image":"ghcr.io/openhands/runtime:4ea3e4b1fd850ae07e7b972feb36fca6e789d7eb-nikolaik","name":"default","working_dir":"/openhands/code/"}],"count":1}
+
+    '

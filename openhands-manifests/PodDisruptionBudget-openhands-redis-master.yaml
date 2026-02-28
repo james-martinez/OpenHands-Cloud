@@ -1,0 +1,19 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  namespace: openhands
+  name: openhands-redis-master
+  labels:
+    app.kubernetes.io/instance: openhands
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 7.4.1
+    helm.sh/chart: redis-20.3.0
+    app.kubernetes.io/component: master
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: openhands
+      app.kubernetes.io/name: redis
+      app.kubernetes.io/component: master

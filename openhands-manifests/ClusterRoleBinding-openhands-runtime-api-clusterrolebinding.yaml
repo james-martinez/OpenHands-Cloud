@@ -1,0 +1,19 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  namespace: openhands
+  name: openhands-runtime-api-clusterrolebinding
+  labels:
+    helm.sh/chart: runtime-api-0.1.20
+    app.kubernetes.io/name: runtime-api
+    app.kubernetes.io/instance: openhands
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+subjects:
+- kind: ServiceAccount
+  name: runtime-api-sa
+  namespace: openhands
+roleRef:
+  kind: ClusterRole
+  name: openhands-runtime-api-clusterrole
+  apiGroup: rbac.authorization.k8s.io
